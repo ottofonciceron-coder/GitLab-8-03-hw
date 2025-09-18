@@ -1,64 +1,80 @@
-# Занятие: Развертывание "GitLab 8-03" - Марчук Кирилл
+# Домашнее задание к занятию "Система мониторинга Zabbix 2" - Марчук Кирилл
 
-### Задание 1 Разверните GitLab 
- 
 
-1.  `Развернул GitLab CE на VM:** [http://158.160.199.220](http://158.160.199.220)`
-2. `Создал тестовый проект `my-first-project`
-3.  `Зарегистрировал gitlab-runner для этого проекта и запустил его в режиме Docker`
 
-1.   --url `http://158.160.199.220/`
-2.   --description `my-docker-runner`
-3.   --tag-list `docker`
-4.   --executor 'docker'
-5.   --docker-image 'alpine:latest'
+### Задание 1 Создайте свой шаблон, в котором будут элементы данных, мониторящие загрузку CPU и RAM хоста.
 
-![Развернули gitlab]https://drive.google.com/file/d/13exMLJJZooNh8xcUYlzPy7UmsPa4L8wZ/view?usp=sharing
-![Создали Проект]https://drive.google.com/file/d/1VcCH5gfhp-XjdepNZFtcdDn5R5WskZUE/view?usp=sharing
-![Зарегистрировал gitlab-runner]https://drive.google.com/file/d/1wIjv-8XOXNz1BezbI3G5GXWnGG3gb4Fw/view?usp=sharing
+
+1. `В веб-интерфейсе Zabbix Servera в разделе Templates создаём новый шаблон`
+2. `Создаём Item который будет собирать информацию об загрузке CPU`
+3. `Создаём Item который будет собирать информацию об загрузке RAM`
+
+
+```
+
+```
+
+
+![Задание 1](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%201.png)`
 
 ---
 
-### Задание 2 Запуск Runner
+### Задание 2 Добавьте в Zabbix два хоста и задайте им имена <фамилия и инициалы-1> и <фамилия и инициалы-2>..
 
-`Пушим Репозиторий на GitLab.`
 
-1. `Создаём файл .gitlab-ci.yml`
-2.  `Пушим репозиторий на gitlab,git push -u origin master`
-3. `Проверяем логи Пайплайн и сам Runner`
+
+1. `Установил Zabbix Agent на 2 вирт.машины`
+2. `Добавил Zabbix Server в список разрешенных серверов своих Zabbix Agentов`
+3. `Добавил Zabbix Agentов в раздел Configuration > Hosts своего Zabbix Servera`
+4. `Добавил Zabbix Agentов в раздел Configuration > Hosts вашего Zabbix Servera`
+5. `В разделе Latest Data начали появляться данные с добавленных агентов`
+6. 
+
+```
+wget https://repo.zabbix.com/zabbix/6.4/debian/pool/main/z/zabbix-release/zabbix-release_6.4-1+debian11_all.deb
+sudo dpkg -i zabbix-release_6.4-1+debian11_all.deb
+sudo apt update
+sudo apt install zabbix-agent -y
+sudo nano /etc/zabbix/zabbix_agentd.conf  # редактирование Server, ServerActive, Hostname
+sudo systemctl enable zabbix-agent
+sudo systemctl restart zabbix-agent
+sudo systemctl status zabbix-agent
+```
+
+---
+
+### Задание 3 Привяжите созданный шаблон к двум хостам. Также привяжите к обоим хостам шаблон Linux by Zabbix Agent.
+
+
+
+1. `В настройках каждого хоста и в разделе Templates прикрепляем к этому хосту наш шаблон`
+2. `Так же к каждому хосту привязываем шаблон Linux by Zabbix Agent`
+3. `Проверяем что в раздел Latest Data начали поступать необходимые данные из нашего шаблона`
 
 
 ```
-Поле для вставки кода...
-```yaml
-stages:
-  - test
-  - build
 
-test-job:
-  stage: test
-  image: alpine:latest
-  tags:
-    - docker
-  script:
-    - echo "Hello from GitLab Runner!"
-    - uname -a
-
-build-job:
-  stage: build
-  image: alpine:latest
-  tags:
-    - docker
-  script:
-    - echo "Building project..."
-    - echo "Build completed!"
 ```
 
 
-![Проверка раннера]https://drive.google.com/file/d/11G5loSTxA3vf-0qQnu-X_HKRYTvaXN7-/view?usp=sharing
-![ПРоверка]https://drive.google.com/file/d/1Zw3wow1RW8nJ2_GXe7s3-j46OXjEA2ML/view?usp=sharing
-![Логи Job]https://drive.google.com/file/d/1JxAlH2Wud1KqXXkgcp6PugfzSNLipDNE/view?usp=sharing
-![Логи Тестов]https://drive.google.com/file/d/1pXL0rMDYwrhsx7Yi_Kz7D7yWWzRM45_O/view?usp=sharing
+![Задание 2](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%202.png)`
+![Задание 3](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%2023.png)`
+![Задание 3](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%203.png)`
+
+---
+
+### Задание 4 Создайте свой кастомный дашборд.
 
 
+1. `В разделе Dashboards создаём новый дашборд`
+2. `Размещаем на нём несколько графиков на своё усмотрение.`
 
+
+```
+
+```
+
+
+![Задание 4](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%204.png)`
+
+---
