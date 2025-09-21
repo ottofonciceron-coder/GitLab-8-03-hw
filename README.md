@@ -57,11 +57,8 @@ sudo systemctl status zabbix-agent
 ```
 
 
-![Задание 2](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%202.png)`
+![Задание 2-3](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%202-3.png)`
 
-![Задание 3](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%2023.png)`
-
-![Задание 3](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%203.png)`
 
 ---
 
