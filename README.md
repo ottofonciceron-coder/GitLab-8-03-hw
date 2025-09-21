@@ -36,9 +36,10 @@ sudo dpkg -i zabbix-release_6.4-1+debian11_all.deb
 sudo apt update
 sudo apt install zabbix-agent -y
 sudo nano /etc/zabbix/zabbix_agentd.conf  # редактирование Server, ServerActive, Hostname
-sudo systemctl enable zabbix-agent
 sudo systemctl restart zabbix-agent
+sudo systemctl enable zabbix-agent
 sudo systemctl status zabbix-agent
+
 ```
 
 ---
