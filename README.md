@@ -1,80 +1,149 @@
-# Домашнее задание к занятию "Система мониторинга Zabbix 2" - Марчук Кирилл
+# Домашнее задание к занятию 1 "Disaster recovery и Keepalived" - Марчук Кирилл
 
 
 
-### Задание 1 Создайте свой шаблон, в котором будут элементы данных, мониторящие загрузку CPU и RAM хоста.
+### Задание 1 На данной схеме уже настроено отслеживание интерфейсов маршрутизаторов Gi0/1 (для нулевой группы)
+Необходимо аналогично настроить отслеживание состояния интерфейсов Gi0/0 (для первой группы).
+Для проверки корректности настройки, разорвите один из кабелей между одним из маршрутизаторов и Switch0 и запустите ping между PC0 и Server0.
 
 
-1. `В веб-интерфейсе Zabbix Servera в разделе Templates создаём новый шаблон`
-2. `Создаём Item который будет собирать информацию об загрузке CPU`
-3. `Создаём Item который будет собирать информацию об загрузке RAM`
+
+1. `Настраиваем отслеживание состояния интрефейсов`
+2. `Делаем имитацию разрыва соединения и проверям через Ping`
+
 
 
 ```
+маршрутизатор 1
+enable
+configure terminal
+interface GigabitEthernet0/0
+standby 1 ip 192.168.10.1
+standby 1 priority 110
+standby 1 preempt
+standby 1 track GigabitEthernet0/0 20
+exit
+
+маршрутизатор 2
+enable
+configure terminal
+interface GigabitEthernet0/0
+standby 1 ip 192.168.10.1
+standby 1 priority 100
+standby 1 preempt
+standby 1 track GigabitEthernet0/0 20
+exit
 
 ```
 
 
-![Задание 1](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%201.png)`
+![Router 1](https://github.com/ottofonciceron-coder/Disaster-recovery-Keepalived-git-hw/blob/main/Router1.png)`
+
+![Router 2](https://github.com/ottofonciceron-coder/Disaster-recovery-Keepalived-git-hw/blob/main/Router%202.png)`
+
+![Router 2](https://github.com/ottofonciceron-coder/Disaster-recovery-Keepalived-git-hw/blob/main/Router%2022.png)`
 
 ---
 
-### Задание 2 Добавьте в Zabbix два хоста и задайте им имена <фамилия и инициалы-1> и <фамилия и инициалы-2>..
+### Задание 2 Запустите две виртуальные машины Linux, установите и настройте сервис Keepalived и Напишите Bash-скрипт, который будет проверять доступность порта данного веб-сервера и существование файла index.html
 
 
 
-1. `Установил Zabbix Agent на 2 вирт.машины`
-2. `Добавил Zabbix Server в список разрешенных серверов своих Zabbix Agentов`
-3. `Добавил Zabbix Agentов в раздел Configuration > Hosts своего Zabbix Servera`
-4. `Добавил Zabbix Agentов в раздел Configuration > Hosts вашего Zabbix Servera`
-5. `В разделе Latest Data начали появляться данные с добавленных агентов`
-6. 
-
-```
-wget https://repo.zabbix.com/zabbix/6.4/debian/pool/main/z/zabbix-release/zabbix-release_6.4-1+debian11_all.deb
-sudo dpkg -i zabbix-release_6.4-1+debian11_all.deb
-sudo apt update
-sudo apt install zabbix-agent -y
-sudo nano /etc/zabbix/zabbix_agentd.conf  # редактирование Server, ServerActive, Hostname
-sudo systemctl restart zabbix-agent
-sudo systemctl enable zabbix-agent
-sudo systemctl status zabbix-agent
-
-```
-
----
-
-### Задание 3 Привяжите созданный шаблон к двум хостам. Также привяжите к обоим хостам шаблон Linux by Zabbix Agent.
-
-
-
-1. `В настройках каждого хоста и в разделе Templates прикрепляем к этому хосту наш шаблон`
-2. `Так же к каждому хосту привязываем шаблон Linux by Zabbix Agent`
-3. `Проверяем что в раздел Latest Data начали поступать необходимые данные из нашего шаблона`
+1. `Установил 2 вирт.машины и устанавливаем и настраиваем сервис Keepalived`
+2. `Настраиваем веб-сервер nginx на 2 вирт.машинах`
+3. `Написали Bash-скрипт, который будет проверять доступность порта данного веб-сервера и существование файла index.html`
+4. `Настраиваем Keepalived так, чтобы он запускал данный скрипт каждые 3 секунды и переносил виртуальный IP на другой сервер (BACKUP)`
 
 
 ```
+# СКРИПТ
+
+#!/bin/bash
+
+WEB_PORT=80
+WEB_ROOT="/var/www/html"
+INDEX_FILE="$WEB_ROOT/index.html"
+
+# Проверяю, слушает ли порт
+nc -z localhost $WEB_PORT
+if [ $? -ne 0 ]; then
+  echo "Port $WEB_PORT is down"
+  exit 1
+fi
+
+# Проверяю наличие index.html
+if [ ! -f "$INDEX_FILE" ]; then
+  echo "File $INDEX_FILE missing"
+  exit 1
+fi
+
+# Если Всё Хорошо
+exit 0
+
+#КОНФИГ keepalived.conf MASTER
+
+vrrp_script chk_web {
+    script "/etc/keepalived/check_web.sh"
+    interval 3
+    fall 2
+    rise 2
+}
+
+vrrp_instance VI_1 {
+    state MASTER
+    interface eth0
+    virtual_router_id 51
+    priority 100
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1234
+    }
+
+    virtual_ipaddress {
+        192.168.10.100
+    }
+
+    track_script {
+        chk_web
+    }
+}
+
+#КОНФИГ keepalived.conf BACKUP
+
+vrrp_script chk_web {
+    script "/etc/keepalived/check_web.sh"
+    interval 3
+    fall 2
+    rise 2
+}
+
+vrrp_instance VI_1 {
+    state BACKUP
+    interface eth0
+    virtual_router_id 51
+    priority 90
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1234
+    }
+
+    virtual_ipaddress {
+        192.168.10.100
+    }
+
+    track_script {
+        chk_web
+    }
+}
+
 
 ```
 
+![MASTER](https://github.com/ottofonciceron-coder/Disaster-recovery-Keepalived-git-hw/blob/main/Master%20тест%20.png)`
 
-![Задание 2-3](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Задание%202-3.png)`
+![BACKUP](https://github.com/ottofonciceron-coder/Disaster-recovery-Keepalived-git-hw/blob/main/BACKUP.png)`
 
-
----
-
-### Задание 4 Создайте свой кастомный дашборд.
-
-
-1. `В разделе Dashboards создаём новый дашборд`
-2. `Размещаем на нём несколько графиков на своё усмотрение.`
-
-
-```
-
-```
-
-
-![Задание 4](https://github.com/ottofonciceron-coder/GitLab-8-03-hw/blob/main/Zadanie%204.png)`
 
 ---
